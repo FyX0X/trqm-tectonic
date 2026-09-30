@@ -1,26 +1,23 @@
 from __future__ import annotations
 
 import json
-import os
 import re
+import sys
+from pathlib import Path
 from typing import Any
 
-from openai import OpenAI
+# Project root (…/trqm-tectonic) so ai_integration is importable
+_ROOT = Path(__file__).resolve().parents[2]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+from ai_integration.ai import call_ai, get_model_name  # noqa: E402
 
 PROMPT_TRQMMETA = "trqmmeta-v1"
 
 
-def get_client() -> OpenAI:
-    api_key = os.getenv("OPENAI_API_KEY", "ollama")
-    base_url = os.getenv("OPENAI_BASE_URL")  # e.g. http://localhost:11434/v1
-    kwargs: dict[str, Any] = {"api_key": api_key}
-    if base_url:
-        kwargs["base_url"] = base_url
-    return OpenAI(**kwargs)
-
-
 def get_model() -> str:
-    return os.getenv("TRQM_MODEL", os.getenv("OPENAI_MODEL", "gpt-4o-mini"))
+    return get_model_name()
 
 
 def _extract_json(text: str) -> Any:
@@ -38,31 +35,19 @@ def _extract_json(text: str) -> Any:
 
 
 def chat_json(system: str, user: str, *, temperature: float = 0.2) -> Any:
-    """Call the chat model and parse a JSON object from the response."""
-    client = get_client()
-    model = get_model()
-    response = client.chat.completions.create(
-        model=model,
-        temperature=temperature,
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ],
-        response_format={"type": "json_object"},
+    """Call Gemini via ai_integration and parse a JSON object from the response."""
+    del temperature  # Gemini call in ai_integration has no temperature knob yet
+    prompt = (
+        f"{system.strip()}\n\n"
+        "Respond with a single valid JSON object only. "
+        "Do not wrap it in markdown unless necessary.\n\n"
+        f"{user.strip()}"
     )
-    content = response.choices[0].message.content or "{}"
+    content = call_ai(prompt) or "{}"
     return _extract_json(content)
 
 
 def chat_text(system: str, user: str, *, temperature: float = 0.2) -> str:
-    client = get_client()
-    model = get_model()
-    response = client.chat.completions.create(
-        model=model,
-        temperature=temperature,
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ],
-    )
-    return response.choices[0].message.content or ""
+    del temperature
+    prompt = f"{system.strip()}\n\n{user.strip()}"
+    return call_ai(prompt) or ""

@@ -30,13 +30,11 @@ pip install -e ".[dev]"
 # Load sample SD Worx-flavoured corpus (writes .md + .trqmmeta, indexes SQLite)
 trqm seed
 
-# Query without calling an external LLM (heuristic relevance/trust/fold)
+# Query without calling Gemini (heuristic relevance/trust/fold)
 trqm query "leave days for Acme employee in Belgium" --no-llm --debug
 
-# Optional: use an OpenAI-compatible API
-export OPENAI_API_KEY=sk-...
-# export OPENAI_BASE_URL=http://localhost:11434/v1   # e.g. Ollama
-# export TRQM_MODEL=gpt-4o-mini
+# Use Gemini via ai_integration/ (reads api_key.txt in project root)
+# echo 'YOUR_GOOGLE_AI_KEY' > api_key.txt
 trqm query "leave days for Acme employee in Belgium" --country BE --company "Acme NV"
 
 # API
@@ -45,12 +43,19 @@ trqm serve
 # GET  http://127.0.0.1:8000/documents
 ```
 
+## LLM setup
+
+1. Put your Google AI API key in `api_key.txt` at the project root (gitignored).
+2. Calls go through [`ai_integration/ai.py`](ai_integration/ai.py) (`call_ai`), model `gemini-3.1-flash-lite`.
+3. Pass `--no-llm` to use heuristics instead (no key required).
+
 ## CLI
 
 | Command | Purpose |
 |---------|---------|
 | `trqm seed` | Write sample docs + `.trqmmeta` + DB index |
 | `trqm ingest PATH` | Ingest one `.md`/`.txt` (AI meta unless `--no-llm`) |
+| `trqm ingest-missing` | Ingest every `.md`/`.txt` in `data/docs/` that has no `.trqmmeta` |
 | `trqm query "…"` | Run full pipeline |
 | `trqm list` | List indexed documents |
 | `trqm serve` | FastAPI on `:8000` |

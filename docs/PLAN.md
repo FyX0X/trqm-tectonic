@@ -6,7 +6,7 @@
 
 **PoC promise:** Move from “I found something” to “here is the answer, the trust score, and the reasons (freshness, ownership, country fit, conflicts).”
 
-**Stack:** Python 3.12+, FastAPI, SQLite + filesystem docs, OpenAI-compatible LLM client (`OPENAI_API_KEY` + `OPENAI_BASE_URL`). No vector DB in v1 — keyword/metadata prefilter + LLM ranking.
+**Stack:** Python 3.12+, FastAPI, SQLite + filesystem docs, Gemini via [`ai_integration/`](../ai_integration/) (`api_key.txt` in project root). No vector DB in v1 — keyword/metadata prefilter + LLM ranking.
 
 ## Architecture
 
