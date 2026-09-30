@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import json
+import os
+import secrets
 import shutil
+import uuid
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Header, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -16,6 +19,32 @@ from .seed import seed_sample_corpus
 from .store import Store
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
+
+# Authentication configuration
+# In production, set TRQM_API_KEY environment variable
+# For development/testing, a default key is used (should be changed in production)
+API_KEY = os.environ.get("TRQM_API_KEY", "dev-key-change-in-production")
+
+# Metadata fields that can be overridden by client uploads
+# Restricting to prevent poisoning of trust-critical fields
+ALLOWED_OVERRIDE_FIELDS = {
+    "title",
+    "keywords",
+    "topics",
+    "language",
+    "summary",
+}
+
+
+def verify_api_key(x_api_key: str = Header(None)) -> None:
+    """Verify API key for write operations."""
+    if not x_api_key or not secrets.compare_digest(x_api_key, API_KEY):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or missing API key",
+            headers={"WWW-Authenticate": "ApiKey"},
+        )
+
 
 app = FastAPI(
     title="TRQM",
@@ -50,7 +79,7 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.post("/seed")
+@app.post("/seed", dependencies=[Depends(verify_api_key)])
 def seed(reset_db: bool = False) -> list[dict[str, Any]]:
     if reset_db and store.db_path.exists():
         store.db_path.unlink()
@@ -65,7 +94,6 @@ def list_documents() -> list[dict[str, Any]]:
         {
             "doc_id": d.doc_id,
             "title": d.title,
-            "source_path": d.source_path,
             "country": d.meta.get("country"),
             "company": d.meta.get("company"),
             "keywords": d.meta.get("keywords"),
@@ -89,7 +117,7 @@ def get_document(doc_id: str) -> dict[str, Any]:
     }
 
 
-@app.post("/documents")
+@app.post("/documents", dependencies=[Depends(verify_api_key)])
 async def upload_document(
     file: UploadFile = File(...),
     use_llm: bool = Form(True),
@@ -100,15 +128,43 @@ async def upload_document(
     suffix = Path(file.filename).suffix.lower()
     if suffix not in {".md", ".txt"}:
         raise HTTPException(400, "Only .md and .txt supported in PoC")
-    dest = store.data_dir / Path(file.filename).name
+    
+    # Generate a unique filename to prevent overwrites
+    # Use UUID to ensure uniqueness and prevent client-controlled filenames
+    original_stem = Path(file.filename).stem
+    # Sanitize the original stem to use as a prefix (optional, for human readability)
+    safe_stem = "".join(c for c in original_stem if c.isalnum() or c in "-_")[:50]
+    unique_name = f"{safe_stem}_{uuid.uuid4().hex[:12]}{suffix}"
+    dest = store.data_dir / unique_name
+    
+    # Ensure destination is within data_dir (defense in depth)
+    try:
+        dest.resolve().relative_to(store.data_dir.resolve())
+    except ValueError:
+        raise HTTPException(400, "Invalid file path")
+    
     with dest.open("wb") as out:
         shutil.copyfileobj(file.file, out)
+    
+    # Parse and validate metadata overrides
     overrides: dict[str, Any] | None = None
     if overrides_json:
-        overrides = json.loads(overrides_json)
+        try:
+            raw_overrides = json.loads(overrides_json)
+            # Filter to only allowed fields to prevent metadata poisoning
+            overrides = {
+                k: v for k, v in raw_overrides.items() 
+                if k in ALLOWED_OVERRIDE_FIELDS
+            }
+        except json.JSONDecodeError:
+            raise HTTPException(400, "Invalid JSON in overrides_json")
+    
     try:
         meta = ingest_file(store, dest, overrides=overrides, use_llm=use_llm)
     except Exception as exc:
+        # Clean up the uploaded file on ingestion failure
+        if dest.exists():
+            dest.unlink()
         raise HTTPException(500, str(exc)) from exc
     return {"meta": meta, "meta_path": str(store.meta_path_for(dest))}
 
