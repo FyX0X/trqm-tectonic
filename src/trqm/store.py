@@ -11,6 +11,9 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DATA_DIR = ROOT / "data" / "docs"
 DEFAULT_DB_PATH = ROOT / "data" / "trqm.db"
 
+# Security limit for reading document bodies into memory
+MAX_DOCUMENT_READ_BYTES = 10 * 1024 * 1024  # 10 MB
+
 
 @dataclass
 class DocumentRecord:
@@ -71,6 +74,13 @@ class Store:
         return path
 
     def read_body(self, source_path: Path) -> str:
+        """Read document body with size limit to prevent memory exhaustion."""
+        file_size = source_path.stat().st_size
+        if file_size > MAX_DOCUMENT_READ_BYTES:
+            raise ValueError(
+                f"Document size ({file_size} bytes) exceeds maximum "
+                f"readable size ({MAX_DOCUMENT_READ_BYTES} bytes)"
+            )
         return source_path.read_text(encoding="utf-8")
 
     def write_meta(self, source_path: Path, meta: dict[str, Any]) -> Path:
