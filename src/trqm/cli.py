@@ -83,6 +83,20 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "serve":
         import uvicorn
+        
+        # Print API key information before starting server
+        print("=" * 70)
+        print("TRQM API Server - Authentication Required")
+        print("=" * 70)
+        print("All API endpoints (except /health and /) require authentication.")
+        print("Include the API key in requests using the X-API-Key header.")
+        print("")
+        print("The API key is loaded from:")
+        print("  1. Environment variable: TRQM_API_KEY")
+        print("  2. File: trqm_api_key.txt (in project root)")
+        print("  3. Auto-generated if neither exists")
+        print("=" * 70)
+        print("")
 
         uvicorn.run("trqm.api:app", host=args.host, port=args.port, reload=False)
         return 0
