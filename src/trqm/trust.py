@@ -157,7 +157,7 @@ def rule_review_due(meta: dict[str, Any]) -> dict[str, Any]:
 
 
 def rule_confidentiality(
-    meta: dict[str, Any], requester_level: str = "internal"
+    meta: dict[str, Any], requester_level: str = "public"
 ) -> tuple[dict[str, Any], bool]:
     level = meta.get("confidentiality") or "internal"
     doc_rank = CONF_RANK.get(level, 1)
@@ -203,7 +203,7 @@ def run_rules(
     *,
     query_countries: list[str] | None = None,
     query_companies: list[str] | None = None,
-    requester_level: str = "internal",
+    requester_level: str = "public",
     conflicts_for_doc: list[str] | None = None,
 ) -> tuple[list[dict[str, Any]], float, bool]:
     signals: list[dict[str, Any]] = []
@@ -321,7 +321,7 @@ def assess_trust(
     *,
     query_countries: list[str] | None = None,
     query_companies: list[str] | None = None,
-    requester_level: str = "internal",
+    requester_level: str = "public",
     conflicts_for_doc: list[str] | None = None,
     use_llm: bool = True,
 ) -> dict[str, Any]:
@@ -400,6 +400,7 @@ def map_and_filter_trust(
     query_companies: list[str] | None = None,
     use_llm: bool = True,
     trust_min: float = TRUST_MIN,
+    requester_level: str = "public",
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Returns (kept assessments, discarded with reason stub)."""
     # First pass without conflicts
@@ -410,6 +411,7 @@ def map_and_filter_trust(
             query_countries=query_countries,
             query_companies=query_companies,
             use_llm=use_llm,
+            requester_level=requester_level,
         )
         for c in candidates
     ]
@@ -431,6 +433,7 @@ def map_and_filter_trust(
                 query_companies=query_companies,
                 conflicts_for_doc=conflict_map.get(a["doc_id"]),
                 use_llm=use_llm,
+                requester_level=requester_level,
             )
             for a in draft
         ]

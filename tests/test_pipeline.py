@@ -120,6 +120,7 @@ def test_pipeline_demo_no_llm(seeded_store):
         filters={"country": ["BE"]},
         use_llm=False,
         debug=True,
+        requester_level="internal",
     )
     summary = result["summary"]
     used_ids = {u["doc_id"] for u in summary["used_sources"]}
@@ -151,5 +152,49 @@ def test_country_mismatch_excludes_fr(seeded_store):
         {"doc_id": fr.doc_id, "meta": fr.meta, "body": fr.body},
         query_countries=["BE"],
         use_llm=False,
+        requester_level="internal",
     )
     assert assessment["verdict"] == "excluded"
+
+
+def test_public_requester_cannot_access_internal_docs(seeded_store):
+    """Verify that unauthenticated (public) requesters cannot access internal documents."""
+    from trqm.pipeline import run_query
+
+    # Query without specifying requester_level (defaults to "public")
+    result = run_query(
+        seeded_store,
+        "leave days for Acme employee in Belgium",
+        filters={"country": ["BE"]},
+        use_llm=False,
+        debug=True,
+    )
+    summary = result["summary"]
+    used_ids = {u["doc_id"] for u in summary["used_sources"]}
+    
+    # All seeded documents are "internal", so public requester should get no results
+    assert len(used_ids) == 0
+    assert summary["overall_confidence"] == 0.0
+    assert "No sufficiently trusted documents" in summary["answer"]
+
+
+def test_internal_requester_can_access_internal_docs(seeded_store):
+    """Verify that internal requesters can access internal documents."""
+    from trqm.pipeline import run_query
+
+    # Query with requester_level="internal"
+    result = run_query(
+        seeded_store,
+        "leave days for Acme employee in Belgium",
+        filters={"country": ["BE"]},
+        use_llm=False,
+        debug=True,
+        requester_level="internal",
+    )
+    summary = result["summary"]
+    used_ids = {u["doc_id"] for u in summary["used_sources"]}
+    
+    # Internal requester should be able to access internal documents
+    assert len(used_ids) > 0
+    assert summary["overall_confidence"] > 0
+    assert summary["answer"]
