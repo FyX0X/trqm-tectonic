@@ -37,11 +37,21 @@ trqm query "leave days for Acme employee in Belgium" --no-llm --debug
 # echo 'YOUR_GOOGLE_AI_KEY' > api_key.txt
 trqm query "leave days for Acme employee in Belgium" --country BE --company "Acme NV"
 
-# API
+# Browser UI (visual trust pipeline)
 trqm serve
-# POST http://127.0.0.1:8000/query
-# GET  http://127.0.0.1:8000/documents
+# open http://127.0.0.1:8000 — Load demo docs → Try example → Run trust pipeline
 ```
+
+## Browser UI
+
+`trqm serve` opens a visual console at **http://127.0.0.1:8000**:
+
+- Ask a question with country/company filters
+- Watch Filter → Relevance → Trust → Summary light up
+- See confidence ring, trusted answer, why-trusted bars, discarded sources, conflicts, and expert handoff
+- Browse the indexed corpus cards
+
+Leave **Use Gemini AI** unchecked to run heuristics offline; check it when `api_key.txt` is set.
 
 ## LLM setup
 

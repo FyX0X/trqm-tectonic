@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TRQM — find knowledge you can trust</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="atmosphere" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="brand-block">
+      <p class="brand">TRQM</p>
+      <p class="brand-sub">Trust · Relevance · Quality · Metadata</p>
+    </div>
+    <p class="tagline">From “I found something” to “I know why I can rely on it.”</p>
+  </header>
+
+  <main>
+    <section class="query-panel" aria-label="Ask the knowledge base">
+      <label class="field-label" for="theme">What do you need to know?</label>
+      <textarea id="theme" rows="2" placeholder="e.g. leave days for Acme employee in Belgium"></textarea>
+
+      <div class="filters">
+        <div class="field">
+          <label for="country">Country</label>
+          <input id="country" type="text" placeholder="BE" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="company">Company</label>
+          <input id="company" type="text" placeholder="Acme NV" autocomplete="off" />
+        </div>
+        <label class="toggle">
+          <input id="use-llm" type="checkbox" />
+          <span>Use Gemini AI</span>
+        </label>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="run-query" class="btn-primary">Run trust pipeline</button>
+        <button type="button" id="seed-demo" class="btn-ghost">Load demo docs</button>
+        <button type="button" id="example" class="btn-ghost">Try example</button>
+      </div>
+      <p id="status" class="status" role="status"></p>
+    </section>
+
+    <section class="pipeline" aria-label="Pipeline stages">
+      <div class="pipe-step" data-step="filter">
+        <span class="pipe-num">1</span>
+        <span class="pipe-name">Filter</span>
+        <span class="pipe-detail" data-detail="filter">Waiting</span>
+      </div>
+      <div class="pipe-connector" aria-hidden="true"></div>
+      <div class="pipe-step" data-step="relevance">
+        <span class="pipe-num">2</span>
+        <span class="pipe-name">Relevance</span>
+        <span class="pipe-detail" data-detail="relevance">Waiting</span>
+      </div>
+      <div class="pipe-connector" aria-hidden="true"></div>
+      <div class="pipe-step" data-step="trust">
+        <span class="pipe-num">3</span>
+        <span class="pipe-name">Trust</span>
+        <span class="pipe-detail" data-detail="trust">Waiting</span>
+      </div>
+      <div class="pipe-connector" aria-hidden="true"></div>
+      <div class="pipe-step" data-step="convert">
+        <span class="pipe-num">4</span>
+        <span class="pipe-name">Summary</span>
+        <span class="pipe-detail" data-detail="convert">Waiting</span>
+      </div>
+    </section>
+
+    <section id="results" class="results hidden" aria-live="polite">
+      <div class="result-hero">
+        <div class="confidence" aria-label="Overall confidence">
+          <svg viewBox="0 0 120 120" class="confidence-ring">
+            <circle class="ring-track" cx="60" cy="60" r="52" />
+            <circle class="ring-value" cx="60" cy="60" r="52" />
+          </svg>
+          <div class="confidence-label">
+            <strong id="confidence-value">0%</strong>
+            <span>confidence</span>
+          </div>
+        </div>
+        <div class="answer-block">
+          <h2>Trusted answer</h2>
+          <div id="answer" class="answer"></div>
+        </div>
+      </div>
+
+      <div class="result-grid">
+        <article class="panel">
+          <h3>Why these sources</h3>
+          <div id="used-sources" class="source-list"></div>
+        </article>
+
+        <article class="panel">
+          <h3>Set aside</h3>
+          <div id="discarded-sources" class="source-list muted"></div>
+        </article>
+
+        <article class="panel">
+          <h3>Conflicts &amp; gaps</h3>
+          <div id="conflicts"></div>
+          <div id="gaps"></div>
+        </article>
+
+        <article class="panel expert-panel">
+          <h3>Ask an expert</h3>
+          <div id="ask-expert"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="corpus" aria-label="Document corpus">
+      <div class="corpus-head">
+        <h2>Knowledge corpus</h2>
+        <button type="button" id="refresh-docs" class="btn-ghost compact">Refresh</button>
+      </div>
+      <div id="doc-grid" class="doc-grid"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>TRQM PoC · Tectonic × SD Worx</span>
+    <a href="/docs">API docs</a>
+  </footer>
+
+  <script src="/static/app.js" type="module"></script>
+</body>
+</html>

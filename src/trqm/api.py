@@ -6,11 +6,16 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from .ingest import ingest_file
 from .pipeline import run_query
+from .seed import seed_sample_corpus
 from .store import Store
+
+STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 app = FastAPI(
     title="TRQM",
@@ -18,6 +23,8 @@ app = FastAPI(
     version="0.1.0",
 )
 store = Store()
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 class QueryFilters(BaseModel):
@@ -33,9 +40,23 @@ class QueryRequest(BaseModel):
     debug: bool = False
 
 
+@app.get("/")
+def ui() -> FileResponse:
+    return FileResponse(STATIC_DIR / "index.html")
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.post("/seed")
+def seed(reset_db: bool = False) -> list[dict[str, Any]]:
+    if reset_db and store.db_path.exists():
+        store.db_path.unlink()
+        store._init_db()
+    docs = seed_sample_corpus(store)
+    return [{"doc_id": d["doc_id"], "title": d.get("title")} for d in docs]
 
 
 @app.get("/documents")
