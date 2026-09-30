@@ -38,6 +38,7 @@ class QueryRequest(BaseModel):
     filters: QueryFilters | None = None
     use_llm: bool = True
     debug: bool = False
+    requester_level: str = "public"
 
 
 @app.get("/")
@@ -117,5 +118,5 @@ async def upload_document(
 def query(req: QueryRequest) -> dict[str, Any]:
     filters = req.filters.model_dump(exclude_none=True) if req.filters else {}
     return run_query(
-        store, req.theme, filters, use_llm=req.use_llm, debug=req.debug
+        store, req.theme, filters, use_llm=req.use_llm, debug=req.debug, requester_level=req.requester_level
     )

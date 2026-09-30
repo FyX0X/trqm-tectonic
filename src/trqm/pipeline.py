@@ -15,6 +15,7 @@ def run_query(
     *,
     use_llm: bool = True,
     debug: bool = False,
+    requester_level: str = "public",
 ) -> dict[str, Any]:
     filters = dict(filters or {})
     inferred = infer_filters_from_theme(theme)
@@ -30,6 +31,7 @@ def run_query(
         query_countries=query_countries or None,
         query_companies=query_companies or None,
         use_llm=use_llm,
+        requester_level=requester_level,
     )
 
     summary = convert_foldl(theme, trusted, discarded, use_llm=use_llm)
