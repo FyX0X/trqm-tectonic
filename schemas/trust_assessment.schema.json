@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trqm.local/schemas/trust_assessment.schema.json",
+  "title": "TrustAssessment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "doc_id",
+    "trust_score",
+    "rules_score",
+    "llm_adjustment",
+    "signals",
+    "verdict",
+    "explanation"
+  ],
+  "properties": {
+    "doc_id": { "type": "string" },
+    "trust_score": { "type": "number", "minimum": 0, "maximum": 1 },
+    "rules_score": { "type": "number", "minimum": 0, "maximum": 1 },
+    "llm_adjustment": { "type": "number", "minimum": -0.15, "maximum": 0.15 },
+    "signals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["rule_id", "passed", "weight", "detail"],
+        "properties": {
+          "rule_id": { "type": "string" },
+          "passed": { "type": "boolean" },
+          "weight": { "type": "number" },
+          "detail": { "type": "string" },
+          "score_contribution": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "uncertainties": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "expert_hint": { "type": ["string", "null"] },
+    "verdict": {
+      "type": "string",
+      "enum": ["trusted", "usable_with_caveats", "low_trust", "excluded"]
+    },
+    "explanation": { "type": "string" }
+  }
+}

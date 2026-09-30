@@ -1,1 +1,10 @@
 api_key.txt
+data/
+*.db
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+dist/
+*.egg-info/
+.mypy_cache/

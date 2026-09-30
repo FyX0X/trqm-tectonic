@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trqm.local/schemas/trusted_summary.schema.json",
+  "title": "TrustedSummary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "theme",
+    "answer",
+    "overall_confidence",
+    "used_sources",
+    "discarded_sources",
+    "conflicts_detected",
+    "gaps",
+    "generated_at"
+  ],
+  "properties": {
+    "theme": { "type": "string" },
+    "answer": { "type": "string" },
+    "overall_confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "used_sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["doc_id", "title", "trust_score", "why_trusted"],
+        "properties": {
+          "doc_id": { "type": "string" },
+          "title": { "type": "string" },
+          "trust_score": { "type": "number" },
+          "why_trusted": { "type": "string" }
+        }
+      }
+    },
+    "discarded_sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["doc_id", "reason"],
+        "properties": {
+          "doc_id": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "conflicts_detected": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["claim", "sources", "resolution"],
+        "properties": {
+          "claim": { "type": "string" },
+          "sources": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "resolution": { "type": "string" }
+        }
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "ask_expert": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "reason": { "type": "string" }
+      }
+    },
+    "generated_at": { "type": "string", "format": "date-time" }
+  }
+}
