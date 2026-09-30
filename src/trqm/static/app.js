@@ -225,7 +225,7 @@ async function loadDocs() {
             <h3>${escapeHtml(d.title || d.doc_id)}</h3>
             <div class="doc-meta">${countries}${companies}</div>
             <p class="source-why">${escapeHtml(
-              (d.keywords || []).slice(0, 6).join(" · ") || d.source_path || ""
+              (d.keywords || []).slice(0, 6).join(" · ") || ""
             )}</p>
           </article>
         `;
@@ -286,7 +286,12 @@ async function runQuery() {
 async function seedDemo() {
   setStatus("Seeding demo corpus…");
   try {
-    const res = await fetch("/seed", { method: "POST" });
+    const apiKey = prompt("Enter API key (or leave empty for dev-key-change-in-production):");
+    const headers = {};
+    if (apiKey !== null) {
+      headers["X-API-Key"] = apiKey || "dev-key-change-in-production";
+    }
+    const res = await fetch("/seed", { method: "POST", headers });
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
     setStatus(`Loaded ${data.length} demo documents.`);
