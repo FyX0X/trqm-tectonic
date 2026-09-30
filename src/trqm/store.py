@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
@@ -74,6 +75,10 @@ class Store:
 
     def write_meta(self, source_path: Path, meta: dict[str, Any]) -> Path:
         meta_path = self.meta_path_for(source_path)
+        base_real = os.path.realpath(self.data_dir)
+        target_real = os.path.realpath(meta_path)
+        if os.path.commonpath([base_real, target_real]) != base_real:
+            raise Exception("Invalid file path")
         meta_path.write_text(
             json.dumps(meta, indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8",
