@@ -398,6 +398,7 @@ def map_and_filter_trust(
     *,
     query_countries: list[str] | None = None,
     query_companies: list[str] | None = None,
+    requester_level: str = "internal",
     use_llm: bool = True,
     trust_min: float = TRUST_MIN,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -409,6 +410,7 @@ def map_and_filter_trust(
             c,
             query_countries=query_countries,
             query_companies=query_companies,
+            requester_level=requester_level,
             use_llm=use_llm,
         )
         for c in candidates
@@ -429,6 +431,7 @@ def map_and_filter_trust(
                 },
                 query_countries=query_countries,
                 query_companies=query_companies,
+                requester_level=requester_level,
                 conflicts_for_doc=conflict_map.get(a["doc_id"]),
                 use_llm=use_llm,
             )

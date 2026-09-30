@@ -15,6 +15,7 @@ def run_query(
     *,
     use_llm: bool = True,
     debug: bool = False,
+    requester_level: str = "internal",
 ) -> dict[str, Any]:
     filters = dict(filters or {})
     inferred = infer_filters_from_theme(theme)
@@ -29,6 +30,7 @@ def run_query(
         relevant,
         query_countries=query_countries or None,
         query_companies=query_companies or None,
+        requester_level=requester_level,
         use_llm=use_llm,
     )
 
